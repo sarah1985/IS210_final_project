@@ -163,13 +163,15 @@ class RecipeCollection(object):
 class Recipe(object):
     """defines the recipe and its components"""
 
-    def __init__(self, filename):
+    toc = []
+
+    def __init__(self):
         """constructor"""
 
-        self.filename = filename
+        #self.filename = filename
         self.new_recipe = []
 
-    def create_new_recipe(self, filename):
+    def create_new_recipe(self):
         """combines ingredient collection and direction collection to create
         new recipe and add to file"""
 
@@ -180,6 +182,7 @@ class Recipe(object):
 
             if len(user_prompt) > 0 and user_prompt[0] == 'y':
                 title = raw_input('What is the recipe name? ').strip() + '.txt'
+                self.toc.append(title)
 
                 try:
                     with open(title, 'w') as new_file:
@@ -199,22 +202,30 @@ class Recipe(object):
                         print 'You\'re finished adding this recipe!'
 
                 except IOError:
-                    print 'There was an error opening {}.'.format(filename)
+                    print 'There was an error opening {}.'.format(title)
 
             else:
                 new_rec = False
 
-    def view_recipe(self, filename):
+    def view_recipe(self):
         """allow user to view entered recipe"""
 
-        for item in self.new_recipe:
-            print item
+        recipe = raw_input(
+            'Enter the recipe name you\'d like to view: ').strip() + '.txt'
 
-    def search_recipe(self, keyword):
+        try:
+            with open(recipe, 'r') as view_recipe:
+                for line in view_recipe:
+                    print line
+
+        except IOError:
+            print 'There was an error opening {}.'.format(recipe)
+
+    def search_recipes(self, keyword):
         """search recipes by keyword"""
 
-        for item in self.new_recipe:
-            return True if item.search_recipe(keyword) else False
+        for item in self.toc:
+            return True if item.search_recipes(keyword) else False
 
 
 class IngredientCollection(object):
@@ -390,9 +401,9 @@ if __name__ == "__main__":
     # test_dir.get_direction_list()
     # print test_dir.user_review()
 
-    add_recipe = Recipe('my_cookbook.txt')
-    add_recipe.create_new_recipe('my_cookbook.txt')
-    print add_recipe.user_review()
+    add_recipe = Recipe()
+    add_recipe.create_new_recipe()
+    print add_recipe.view_recipe()
 
     # create_recipe = RecipeManagement()
     # create_recipe.set('key', test_list)
