@@ -5,7 +5,8 @@
 import os
 import os.path
 import pickle
-import fractions
+from fractions import Fraction
+from decimal import Decimal
 
 
 class RecipeManagement(object):
@@ -89,14 +90,58 @@ class RecipeManagement(object):
 #
 #     return new_yield
 
+# run once to create cookbook file
+# create_cookbook = open('my_cookbook.txt', 'w')
+# create_cookbook.write('My Custom Cookbook\n')
+# create_cookbook.close()
+
 
 class RecipeCollection(object):
-    """creates custom '\cookbook'\!"""
+    """Add, view or edit cookbook"""
 
-    def __init__(self):
+    def __init__(self, cookbook_filename):
         """constructor"""
 
-        #self.cookbook =
+        self.cookbook_filename = cookbook_filename
+
+    def my_cookbook(self):
+        """gathers recipes to compile user's cookbook"""
+
+        user_action = raw_input(
+            'Enter a recipe action (add, view, edit): ').lower.strip
+
+        if len(user_action) > 0 and user_action == 'add':
+
+            add_recipe = True
+
+            while add_recipe:
+
+                try:
+                    my_file = open('cookbook_filename', 'a')
+                    recipe = Recipe()
+                    self.cookbook.append(recipe)
+                    recipe.create_new_recipe()
+
+                except IOError:
+                    print 'Oops! There was an error opening the .'
+
+                finally:
+                    my_file.close()
+                    print 'You\'ve successfully added this recipe. '
+                    add_recipe = False
+
+        elif len(user_action) > 0 and user_action == 'view':
+            view_recipe = True
+            while view_recipe:
+                user_prompt = raw_input(
+                    'Would you like to retrieve a recipe? ').strip()
+
+
+    def user_review(self):
+        """allow user to view entered recipe"""
+
+        for item in self.add_recipe:
+            print item
 
     def seach_recipes(self):
         """method to search all recipes for entered keyword and return
@@ -107,30 +152,69 @@ class RecipeCollection(object):
         #for
 
 
-        if len(search_results) > 0:
-            for item in search_results:
-                print item
-
-        else:
-            print 'No results found! Please try another search.'
+            #if len(search_results) > 0:
+        #         for item in search_results:
+        #             print item
+        #
+        # else:
+        #     print 'No results found! Please try another search.'
 
 
 class Recipe(object):
     """defines the recipe and its components"""
 
-    def __init__(self):
+    def __init__(self, filename):
         """constructor"""
 
+        self.filename = filename
         self.new_recipe = []
 
-    def create_new_recipe(self):
+    def create_new_recipe(self, filename):
         """combines ingredient collection and direction collection to create
         new recipe and add to file"""
 
-        ingredient_collection = IngredientCollection()
-        direction_collection = DirectionCollection()
+        new_rec = True
+        while new_rec:
+            user_prompt = raw_input(
+                'Would you like to create a recipe? ').strip()
 
+            if len(user_prompt) > 0 and user_prompt[0] == 'y':
+                title = raw_input('What is the recipe name? ').strip() + '.txt'
 
+                try:
+                    with open(title, 'w') as new_file:
+                        self.new_recipe.append(title)
+
+                        ingredient_collection = IngredientCollection()
+                        self.new_recipe.append(ingredient_collection)
+                        ingredient_collection.get_ingredient_list()
+
+                        direction_collection = DirectionCollection()
+                        self.new_recipe.append(direction_collection)
+                        direction_collection.get_direction_list()
+
+                        for line in self.new_recipe:
+                            new_file.write('%s\n' % line)
+
+                        print 'You\'re finished adding this recipe!'
+
+                except IOError:
+                    print 'There was an error opening {}.'.format(filename)
+
+            else:
+                new_rec = False
+
+    def view_recipe(self, filename):
+        """allow user to view entered recipe"""
+
+        for item in self.new_recipe:
+            print item
+
+    def search_recipe(self, keyword):
+        """search recipes by keyword"""
+
+        for item in self.new_recipe:
+            return True if item.search_recipe(keyword) else False
 
 
 class IngredientCollection(object):
@@ -184,20 +268,32 @@ class Ingredient(object):
         self.notes = ''
 
     def get_user_input(self):
-        """input method"""
+        """Gathers quantity, unit ingredient name and notes.
 
-        self.quantity = raw_input("Quantity? ").strip()
-        while not self.quantity.isdigit():
-            self.quantity = raw_input("Not a valid number. Quantity? ")
-        self.quantity = fractions.Fraction(int(self.quantity), 1)
+        Quantity is captured as string and remains so to allow for flexibility
+        in entering (i.e.: 1/3 or compound fractions are allowed and will
+        display in '\human friendly'\ form. This value is not required.
 
-        self.unit = raw_input('Unit of Measure? ').strip()
+        Unit remains as string and allows abbreviations or full words. This
+        value is not required.
+
+        Ingredient name is required.
+
+        Additional notes allows the users to capture any information required
+        for the recipe but not captured elsewhere. (e.g.: softened, sifted,
+        separated, minced, chopped, etc.)"""
+
+        self.quantity = raw_input('Quantity? (if none, press Enter) ').strip()
+
+        self.unit = raw_input(
+            'Unit of Measure? (if none, press Enter) ').strip()
 
         self.name = raw_input('Ingredient Name? ').strip()
         while self.name.strip() == '':
-            self.name = raw_input('Cannot be blank. Ingredient Name? ')
+            self.name = raw_input('Cannot be blank. Ingredient Name? ').strip()
 
-        self.notes = raw_input('Additional Notes/Information? ')
+        self.notes = raw_input(
+            'Additional Notes/Information? (if none, press Enter) ').strip()
 
     def input_to_string(self):
         """convert raw input into string"""
@@ -210,20 +306,8 @@ class Ingredient(object):
     def search_ingredient(self, keyword):
         """ingredient search method"""
 
-        # search_result = []
-        #
-        # keyword = raw_input(
-        #     "What keyword would you like to search? ").strip().lower()
-        #
-        # if keyword in ingredient:
-        #     search_result.append(ingredient)
-        #
-        # else:
-        #     print "No matches found!"
-        #
-        # return search_result
-
         return keyword in self.input_to_string()
+
 
 class DirectionCollection(object):
     """collects user input directions"""
@@ -255,7 +339,7 @@ class DirectionCollection(object):
         """return entered values to user"""
 
         for item in self.direction_list:
-            print item.direction_list()
+            print item
 
     def search_ingredient_collection(self, keyword):
         """ingredient collection search method"""
@@ -278,7 +362,7 @@ class Direction(object):
     def get_user_input(self):
         """method to gather user input recipe directions"""
 
-        self.direction = raw_input('Please enter direction: ')
+        self.direction = raw_input('Direction: ')
         while self.direction.strip() == '':
             self.direction = raw_input(
                 'Cannot be blank. Please enter direction: ')
@@ -295,20 +379,31 @@ if __name__ == "__main__":
     # test.get_user_input()
     # print test.input_to_string()
 
-    test_list = IngredientCollection()
-    test_list.get_ingredient_list()
-    print test_list.user_review()
+    # test_list = IngredientCollection()
+    # test_list.get_ingredient_list()
+    # print test_list.user_review()
 
-    create_recipe = RecipeManagement()
-    create_recipe.set('key', test_list)
-    create_recipe.open()
-    create_recipe.flush()
-    create_recipe.close()
+    # test_dir = Direction()
+    # print test_dir.get_user_input()
 
-    recall_recipe = RecipeManagement()
-    recall_recipe.open()
-    recall_list = recall_recipe.get('key')
-    recall_recipe.close()
-    recall_list.IngredientCollection.user_review()
-    print recall_list.search_ingredient_collection(
-        raw_input('Enter search keyword: '))
+    # test_dir = DirectionCollection()
+    # test_dir.get_direction_list()
+    # print test_dir.user_review()
+
+    add_recipe = Recipe('my_cookbook.txt')
+    add_recipe.create_new_recipe('my_cookbook.txt')
+    print add_recipe.user_review()
+
+    # create_recipe = RecipeManagement()
+    # create_recipe.set('key', test_list)
+    # create_recipe.open()
+    # create_recipe.flush()
+    # create_recipe.close()
+    #
+    # recall_recipe = RecipeManagement()
+    # recall_recipe.open()
+    # recall_list = recall_recipe.get('key')
+    # recall_recipe.close()
+    # recall_list.IngredientCollection.user_review()
+    # print recall_list.search_ingredient_collection(
+    #     raw_input('Enter search keyword: '))
